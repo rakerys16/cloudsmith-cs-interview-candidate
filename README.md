@@ -50,11 +50,11 @@ This repository has undergone several changes to ensure a seamless package promo
 ### 1. **Build Command in `build_package.yaml`**
    - The `build_package.yaml` file was missing the build command, which has now been added to ensure the correct build process is triggered during the release.
 
-### 2. **ID Token in `release_package.yml`**
-   - An ID token was missing in the `release_package.yml` file. This has been added to authenticate and authorize the release process correctly.
+### 2. **id-token in `realease_package.yml` under permissions **
+   - id-token was missing in the `realease_package.yml` file. This has been added to authenticate and authorize the release process correctly.
 
-### 3. **OIDC Credentials in `release_package.yml`**
-   - OIDC (OpenID Connect) credentials were added in the `release_package.yml` to ensure secure access to the necessary services during the release process.
+### 3. **OIDC Credentials in `realease_package.yml` and Cloudsmith CLI installation step**
+   - OIDC (OpenID Connect) credentials were added in the `realease_package.yml` to ensure secure access to the necessary services during the release process.Also, the cloudsmith CLI was not installed in realease_package.yml, that step has been added as well.
 
 ### 4. **Fixed OIDC Credentials in `promote_package.yml`**
    - Fixed the OIDC credentials in `promote_package.yml` to ensure that the promotion process works securely and correctly.
@@ -91,7 +91,7 @@ This repository has undergone several changes to ensure a seamless package promo
 
 2. **Verify the build and release workflows**:
    - The updated `build_package.yaml` will ensure that the package builds correctly during the CI/CD process.
-   - The `release_package.yml` and `promote_package.yml` workflows are configured to handle package promotion from staging to production in Cloudsmith.
+   - The `realease_package.yml` and `promote_package.yml` workflows are configured to handle package promotion from staging to production in Cloudsmith.
 
 3. **Ensure the Cloudsmith repositories are accessible**:
    - GitHub Actions must have write permissions to the Cloudsmith repositories (staging and production).
