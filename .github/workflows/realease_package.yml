@@ -16,6 +16,7 @@ env:
 permissions:
   contents: read
   actions: read
+  id-token: write
 
 jobs:
   publish:
@@ -37,6 +38,18 @@ jobs:
       - name: List directory contents
         run: ls -la dist/
         shell: bash
+
+      - name: Get OIDC token
+        run: |
+          value=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange" | jq '.value')
+          token=$(curl -X POST -H "Content-Type: application/json" -d "{\"oidc_token\":$value, \"service_slug\":\"$CLOUDSMITH_SERVICE_SLUG\"}" https://api.cloudsmith.io/openid/interview-yash-sharma/ | jq -r '.token')
+          curl --request GET --url https://api.cloudsmith.io/v1/user/self/ --header "X-Api-Key:Bearer $token" --header 'accept: application/json'
+
+      - name: Install Cloudsmith CLI
+        uses: cloudsmith-io/cloudsmith-cli-action@v1.0.1
+        with:
+          oidc-namespace: ${{ env.CLOUDSMITH_NAMESPACE }}
+          oidc-service-slug: ${{ env.CLOUDSMITH_SERVICE_SLUG }}
 
       - name: Push package to Cloudsmith
         run: |
