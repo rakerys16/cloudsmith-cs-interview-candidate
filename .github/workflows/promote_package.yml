@@ -58,11 +58,32 @@ jobs:
           
           # Tag the package as ready-for-production (this will add the 'ready-for-production' tag)
           cloudsmith tag add ${{ env.CLOUDSMITH_NAMESPACE }}/${{ env.CLOUDSMITH_STAGING_REPO }}/$IDENTIFIER ready-for-production
+          
+          # Query Cloudsmith for all packages with the 'ready-for-production' tag in the staging repository
+          ALL_READY_PACKAGES=$(cloudsmith list package ${{ env.CLOUDSMITH_NAMESPACE }}/${{ env.CLOUDSMITH_STAGING_REPO }} -q 'tag:ready-for-production' -F json)
 
-          # Promote package using the identifier
-          cloudsmith mv --yes \
-            ${{ env.CLOUDSMITH_NAMESPACE }}/${{ env.CLOUDSMITH_STAGING_REPO }}/$IDENTIFIER \
-            ${{ env.CLOUDSMITH_PRODUCTION_REPO }}
+          if [ -z "$ALL_READY_PACKAGES" ] || [ "$(echo "$ALL_READY_PACKAGES" | jq -r '.data | length')" -eq 0 ]; then
+            echo "No packages found with the 'ready-for-production' tag."
+            exit 1
+          fi
 
-          echo "Package successfully promoted to production."
+          echo "Found packages ready for production. Starting promotion..."
+
+          # Iterate over each package and move it to the production repository
+          for row in $(echo "$ALL_READY_PACKAGES" | jq -r '.data[] | @base64'); do
+            _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+            }
+
+            PACKAGE_IDENTIFIER=$(_jq '.identifier_perm')
+            echo "Promoting package with identifier: $PACKAGE_IDENTIFIER"
+            
+            # Promote the package to production
+            cloudsmith mv --yes \
+              ${{ env.CLOUDSMITH_NAMESPACE }}/${{ env.CLOUDSMITH_STAGING_REPO }}/${PACKAGE_IDENTIFIER} \
+              ${{ env.CLOUDSMITH_PRODUCTION_REPO }}
+
+            echo "Package $PACKAGE_IDENTIFIER successfully promoted to production."
+          done
+
         shell: bash
